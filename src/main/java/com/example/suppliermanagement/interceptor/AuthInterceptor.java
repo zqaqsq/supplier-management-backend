@@ -1,6 +1,7 @@
 package com.example.suppliermanagement.interceptor;
 
 import com.example.suppliermanagement.service.AuthService;
+import com.example.suppliermanagement.util.RequestContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -32,6 +33,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
             response.getWriter().write("{\"success\":false,\"message\":\"未提供有效的认证token\"}");
             return false;
         }
@@ -42,8 +44,15 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 验证token
         if (!authService.validateToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
             response.getWriter().write("{\"success\":false,\"message\":\"token无效或已过期\"}");
             return false;
+        }
+
+        // 设置当前用户名到请求上下文，供 Service 层日志使用
+        String username = authService.getUsernameByToken(token);
+        if (username != null) {
+            RequestContextUtil.setCurrentUsername(username);
         }
     
         // 刷新token(如果需要)，直接调用接口方法

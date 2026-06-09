@@ -1,0 +1,36 @@
+# Maven 构建产物（会在 Docker 内重新构建）
+target/
+!.m2/wrapper/*.jar
+
+# IDE 配置
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# 文档
+*.md
+!README.md
+
+# 测试报告
+**/test-output/
+**/surefire-reports/
+
+# 日志
+*.log
+logs/
+
+# 环境配置文件（包含敏感信息）
+*.env
+application-prod.properties
+
+# 其他
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db

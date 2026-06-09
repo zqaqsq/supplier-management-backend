@@ -15,4 +15,9 @@ public interface AuthService {
     
     // 添加refreshToken方法声明
     String refreshToken(String token);
+
+    /**
+     * 根据 token 获取用户名
+     */
+    String getUsernameByToken(String token);
 }

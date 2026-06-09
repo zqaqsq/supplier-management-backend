@@ -142,12 +142,12 @@ public class SelectionServiceImpl implements SelectionService {
     private Map<Supplier, Double> calculateSupplierWeights(List<Supplier> suppliers) {
         Map<Supplier, Double> weights = new HashMap<>();
         
-        // 资质等级权重
+        // 资质等级权重 - 与数据库中存储的格式保持一致（A/B/C/D）
         Map<String, Double> qualificationWeights = Map.of(
-            "A级", 1.0,
-            "B级", 0.8,
-            "C级", 0.6,
-            "D级", 0.4
+            "A", 1.0,
+            "B", 0.8,
+            "C", 0.6,
+            "D", 0.4
         );
         
         // 地区分布权重（避免过度集中）
@@ -360,11 +360,12 @@ public class SelectionServiceImpl implements SelectionService {
     }
 
     private double calculateQualificationScore(String qualification) {
+        // 与数据库中存储的格式保持一致（A/B/C/D）
         Map<String, Double> scores = Map.of(
-            "A级", 100.0,
-            "B级", 80.0,
-            "C级", 60.0,
-            "D级", 40.0
+            "A", 100.0,
+            "B", 80.0,
+            "C", 60.0,
+            "D", 40.0
         );
         return scores.getOrDefault(qualification, 50.0);
     }
@@ -617,12 +618,12 @@ public class SelectionServiceImpl implements SelectionService {
     private Map<Supplier, Double> calculateOptimizedSupplierWeights(List<Supplier> suppliers) {
         Map<Supplier, Double> weights = new HashMap<>();
         
-        // 资质等级权重
+        // 资质等级权重 - 与数据库中存储的格式保持一致（A/B/C/D）
         Map<String, Double> qualificationWeights = Map.of(
-            "A级", 1.0,
-            "B级", 0.8,
-            "C级", 0.6,
-            "D级", 0.4
+            "A", 1.0,
+            "B", 0.8,
+            "C", 0.6,
+            "D", 0.4
         );
         
         // 地区分布权重（避免过度集中）

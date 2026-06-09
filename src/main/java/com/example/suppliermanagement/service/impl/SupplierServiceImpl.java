@@ -1,7 +1,10 @@
 package com.example.suppliermanagement.service.impl;
 
+import com.example.suppliermanagement.config.CacheConfig;
 import com.example.suppliermanagement.dto.PageResponse;
 import com.example.suppliermanagement.dto.SelectionResultDTO;
+import com.example.suppliermanagement.dto.SupplierDTO;
+import com.example.suppliermanagement.dto.SupplierListDTO;
 import com.example.suppliermanagement.dto.SupplierSearchDTO;
 import com.example.suppliermanagement.dto.SupplierSelectionDTO;
 import com.example.suppliermanagement.model.OperationLog;
@@ -12,9 +15,12 @@ import com.example.suppliermanagement.repository.SelectionResultRepository;
 import com.example.suppliermanagement.repository.SupplierRepository;
 import com.example.suppliermanagement.service.SupplierService;
 import com.example.suppliermanagement.util.ExcelUtil;
+import com.example.suppliermanagement.util.RequestContextUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +55,20 @@ public class SupplierServiceImpl implements SupplierService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // 允许排序的字段白名单
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "name", "creditCode", "qualification", "region", "industry",
+            "status", "scale", "contactPerson", "contactPhone",
+            "establishDate", "registeredCapital", "certificationDate", "expiryDate",
+            "createdAt", "updatedAt"
+    );
+
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public Supplier createSupplier(Supplier supplier) {
         // 检查统一社会信用代码是否已存在
         if (supplierRepository.findByCreditCode(supplier.getCreditCode()).isPresent()) {
@@ -69,6 +88,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public Supplier updateSupplier(Long id, Supplier supplier) {
         Supplier existingSupplier = getSupplierById(id);
         
@@ -111,6 +135,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
         supplierRepository.deleteById(id);
@@ -133,6 +162,10 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public Page<Supplier> getSuppliers(int page, int size, String sortBy, String sortDirection) {
+        // 校验 sortBy 字段是否在白名单中
+        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
+            throw new IllegalArgumentException("不允许的排序字段: " + sortBy);
+        }
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         return supplierRepository.findAll(pageable);
@@ -140,6 +173,10 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public PageResponse<Supplier> searchSuppliers(SupplierSearchDTO searchDTO) {
+        // 校验 sortBy 字段是否在白名单中
+        if (!ALLOWED_SORT_FIELDS.contains(searchDTO.getSortBy())) {
+            throw new IllegalArgumentException("不允许的排序字段: " + searchDTO.getSortBy());
+        }
         Specification<Supplier> spec = createSearchSpecification(searchDTO);
         
         Sort sort = Sort.by(Sort.Direction.fromString(searchDTO.getSortDirection()), searchDTO.getSortBy());
@@ -397,11 +434,13 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @Cacheable(value = CacheConfig.QUALIFICATIONS_CACHE)
     public List<String> getAllQualifications() {
         return supplierRepository.findDistinctQualifications();
     }
 
     @Override
+    @Cacheable(value = CacheConfig.REGIONS_CACHE)
     public List<String> getAllRegions() {
         return supplierRepository.findDistinctRegions();
     }
@@ -409,6 +448,7 @@ public class SupplierServiceImpl implements SupplierService {
 
 
     @Override
+    @Cacheable(value = CacheConfig.STATUSES_CACHE)
     public List<String> getAllStatuses() {
         return supplierRepository.findDistinctStatuses();
     }
@@ -650,9 +690,74 @@ public class SupplierServiceImpl implements SupplierService {
         OperationLog log = new OperationLog();
         log.setOperationType(type);
         log.setContent(details);
-        log.setOperator("system"); // 可以从安全上下文获取
-        log.setIpAddress("127.0.0.1"); // 可以从请求上下文获取
+        // 从请求上下文获取真实的用户名
+        String username = RequestContextUtil.getCurrentUsername();
+        log.setOperator(username != null ? username : "system");
+        // 从请求上下文获取真实的 IP 地址
+        String ipAddress = RequestContextUtil.getClientIpAddress();
+        log.setIpAddress(ipAddress != null ? ipAddress : "unknown");
         operationLogRepository.save(log);
+    }
+
+    // ========== DTO 转换方法 ==========
+
+    /**
+     * 将 Supplier Entity 转换为 SupplierDTO
+     */
+    public SupplierDTO convertToDTO(Supplier supplier) {
+        if (supplier == null) {
+            return null;
+        }
+        SupplierDTO dto = new SupplierDTO();
+        dto.setId(supplier.getId());
+        dto.setName(supplier.getName());
+        dto.setCreditCode(supplier.getCreditCode());
+        dto.setQualification(supplier.getQualification());
+        dto.setRegion(supplier.getRegion());
+        dto.setIndustry(supplier.getIndustry());
+        dto.setAddress(supplier.getAddress());
+        dto.setContactPerson(supplier.getContactPerson());
+        dto.setContactPhone(supplier.getContactPhone());
+        dto.setContactEmail(supplier.getContactEmail());
+        dto.setBusinessScope(supplier.getBusinessScope());
+        dto.setPerformance(supplier.getPerformance());
+        dto.setEstablishDate(supplier.getEstablishDate());
+        dto.setLegalPerson(supplier.getLegalPerson());
+        dto.setRegisteredCapital(supplier.getRegisteredCapital());
+        dto.setStatus(supplier.getStatus());
+        dto.setScale(supplier.getScale());
+        dto.setQualificationMaterials(supplier.getQualificationMaterials());
+        dto.setCertificationDate(supplier.getCertificationDate());
+        dto.setExpiryDate(supplier.getExpiryDate());
+        dto.setRemark(supplier.getRemark());
+        dto.setCreatedAt(supplier.getCreatedAt());
+        dto.setUpdatedAt(supplier.getUpdatedAt());
+        return dto;
+    }
+
+    /**
+     * 将 Supplier Entity 转换为 SupplierListDTO（简化版）
+     */
+    public SupplierListDTO convertToListDTO(Supplier supplier) {
+        if (supplier == null) {
+            return null;
+        }
+        SupplierListDTO dto = new SupplierListDTO();
+        dto.setId(supplier.getId());
+        dto.setName(supplier.getName());
+        dto.setCreditCode(supplier.getCreditCode());
+        dto.setQualification(supplier.getQualification());
+        dto.setRegion(supplier.getRegion());
+        dto.setIndustry(supplier.getIndustry());
+        dto.setStatus(supplier.getStatus());
+        dto.setContactPerson(supplier.getContactPerson());
+        dto.setContactPhone(supplier.getContactPhone());
+        dto.setScale(supplier.getScale());
+        dto.setCertificationDate(supplier.getCertificationDate());
+        dto.setExpiryDate(supplier.getExpiryDate());
+        dto.setCreatedAt(supplier.getCreatedAt());
+        dto.setUpdatedAt(supplier.getUpdatedAt());
+        return dto;
     }
 
     @Override

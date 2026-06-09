@@ -4,14 +4,17 @@ import com.example.suppliermanagement.model.User;
 import com.example.suppliermanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
 
 @Component
 public class UserInitializer implements CommandLineRunner {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -30,7 +33,7 @@ public class UserInitializer implements CommandLineRunner {
         // 创建管理员用户
         User admin = new User();
         admin.setUsername("admin");
-        admin.setPassword(DigestUtils.md5DigestAsHex("admin123".getBytes()));
+        admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setRealName("系统管理员");
         admin.setEmail("admin@example.com");
         admin.setRole("ADMIN");
@@ -40,7 +43,7 @@ public class UserInitializer implements CommandLineRunner {
         // 创建普通用户
         User user = new User();
         user.setUsername("user");
-        user.setPassword(DigestUtils.md5DigestAsHex("user123".getBytes()));
+        user.setPassword(passwordEncoder.encode("user123"));
         user.setRealName("普通用户");
         user.setEmail("user@example.com");
         user.setRole("USER");
