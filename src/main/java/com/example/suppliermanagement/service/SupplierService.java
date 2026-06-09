@@ -2,6 +2,8 @@ package com.example.suppliermanagement.service;
 
 import com.example.suppliermanagement.dto.PageResponse;
 import com.example.suppliermanagement.dto.SelectionResultDTO;
+import com.example.suppliermanagement.dto.SupplierDTO;
+import com.example.suppliermanagement.dto.SupplierListDTO;
 import com.example.suppliermanagement.dto.SupplierSearchDTO;
 import com.example.suppliermanagement.dto.SupplierSelectionDTO;
 import com.example.suppliermanagement.model.Supplier;
@@ -111,5 +113,15 @@ public interface SupplierService {
      * 获取符合条件的供应商用于分级抽取
      */
     List<Supplier> getEligibleForGradedSelection(String qualification, String industry, Integer count);
+
+    /**
+     * 将 Supplier Entity 转换为 SupplierDTO
+     */
+    SupplierDTO convertToDTO(Supplier supplier);
+
+    /**
+     * 将 Supplier Entity 转换为 SupplierListDTO
+     */
+    SupplierListDTO convertToListDTO(Supplier supplier);
 }
     

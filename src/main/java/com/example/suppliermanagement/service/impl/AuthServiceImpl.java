@@ -128,6 +128,15 @@ public class AuthServiceImpl implements AuthService {
         return tokenStore.size();
     }
 
+    @Override
+    public String getUsernameByToken(String token) {
+        TokenInfo tokenInfo = tokenStore.get(token);
+        if (tokenInfo == null) {
+            return null;
+        }
+        return tokenInfo.getUsername();
+    }
+
     // Token信息内部类
     private static class TokenInfo {
         private String username;
