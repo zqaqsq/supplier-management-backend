@@ -1,5 +1,6 @@
 package com.example.suppliermanagement.service.impl;
 
+import com.example.suppliermanagement.config.CacheConfig;
 import com.example.suppliermanagement.dto.PageResponse;
 import com.example.suppliermanagement.dto.SelectionResultDTO;
 import com.example.suppliermanagement.dto.SupplierDTO;
@@ -18,6 +19,8 @@ import com.example.suppliermanagement.util.RequestContextUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +64,11 @@ public class SupplierServiceImpl implements SupplierService {
     );
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public Supplier createSupplier(Supplier supplier) {
         // 检查统一社会信用代码是否已存在
         if (supplierRepository.findByCreditCode(supplier.getCreditCode()).isPresent()) {
@@ -80,6 +88,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public Supplier updateSupplier(Long id, Supplier supplier) {
         Supplier existingSupplier = getSupplierById(id);
         
@@ -122,6 +135,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.QUALIFICATIONS_CACHE,
+            CacheConfig.REGIONS_CACHE,
+            CacheConfig.STATUSES_CACHE
+    }, allEntries = true)
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
         supplierRepository.deleteById(id);
@@ -416,11 +434,13 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @Cacheable(value = CacheConfig.QUALIFICATIONS_CACHE)
     public List<String> getAllQualifications() {
         return supplierRepository.findDistinctQualifications();
     }
 
     @Override
+    @Cacheable(value = CacheConfig.REGIONS_CACHE)
     public List<String> getAllRegions() {
         return supplierRepository.findDistinctRegions();
     }
@@ -428,6 +448,7 @@ public class SupplierServiceImpl implements SupplierService {
 
 
     @Override
+    @Cacheable(value = CacheConfig.STATUSES_CACHE)
     public List<String> getAllStatuses() {
         return supplierRepository.findDistinctStatuses();
     }
