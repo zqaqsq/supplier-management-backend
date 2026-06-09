@@ -7,8 +7,8 @@ import com.example.suppliermanagement.repository.UserRepository;
 import com.example.suppliermanagement.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -20,6 +20,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     // 存储活跃的token，使用内存存储，页面刷新后失效
     private static final Map<String, TokenInfo> tokenStore = new ConcurrentHashMap<>();
@@ -33,9 +36,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsernameAndIsActiveTrue(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("用户名或密码错误"));
 
-        // 验证密码（简单MD5加密，实际项目中应使用BCrypt等）
-        String encryptedPassword = DigestUtils.md5DigestAsHex(loginRequest.getPassword().getBytes());
-        if (!user.getPassword().equals(encryptedPassword)) {
+        // 验证密码（使用BCrypt加密，带随机盐值）
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("用户名或密码错误");
         }
 

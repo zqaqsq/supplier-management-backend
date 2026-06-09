@@ -26,17 +26,13 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "用户登录")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-        try {
-            LoginResponse response = authService.login(loginRequest);
-            // 添加token到响应头，帮助前端自动保存
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + response.getToken());
-            // 设置Access-Control-Expose-Headers，确保前端能读取到Authorization头
-            headers.set("Access-Control-Expose-Headers", "Authorization");
-            return new ResponseEntity<>(ApiResponse.success("登录成功", response), headers, HttpStatus.OK);
-        } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
-        }
+        LoginResponse response = authService.login(loginRequest);
+        // 添加token到响应头，帮助前端自动保存
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + response.getToken());
+        // 设置Access-Control-Expose-Headers，确保前端能读取到Authorization头
+        headers.set("Access-Control-Expose-Headers", "Authorization");
+        return new ResponseEntity<>(ApiResponse.success("登录成功", response), headers, HttpStatus.OK);
     }
 
     @PostMapping("/logout")
@@ -60,9 +56,11 @@ public class AuthController {
             if (isValid) {
                 return ResponseEntity.ok(ApiResponse.success("token有效", true));
             } else {
-                return ResponseEntity.ok(ApiResponse.error("token已过期或无效"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("token已过期或无效"));
             }
         }
-        return ResponseEntity.ok(ApiResponse.error("未提供有效的token"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("未提供有效的token"));
     }
 }
