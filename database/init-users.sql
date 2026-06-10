@@ -1,3 +1,7 @@
+-- 确保用户有正确的权限访问数据库
+GRANT ALL PRIVILEGES ON supplier_management.* TO 'supplier_user'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
 -- 创建用户表
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
