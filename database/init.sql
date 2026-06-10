@@ -9,10 +9,25 @@ USE supplier_management;
 DROP TABLE IF EXISTS operation_logs;
 DROP TABLE IF EXISTS selection_results;
 DROP TABLE IF EXISTS graded_selection_rules;
-DROP TABLE IF EXISTS supplier;
+DROP TABLE IF EXISTS suppliers;
+DROP TABLE IF EXISTS users;
+
+-- 创建用户表
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
+    password VARCHAR(100) NOT NULL COMMENT '密码',
+    real_name VARCHAR(50) COMMENT '真实姓名',
+    email VARCHAR(100) COMMENT '邮箱',
+    phone VARCHAR(20) COMMENT '电话',
+    role VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    last_login TIMESTAMP NULL COMMENT '最后登录时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- 创建供应商表
-CREATE TABLE supplier (
+CREATE TABLE suppliers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL COMMENT '供应商名称',
     credit_code VARCHAR(50) UNIQUE NOT NULL COMMENT '统一社会信用代码',
