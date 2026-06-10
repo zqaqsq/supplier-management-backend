@@ -1224,6 +1224,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('ai-search')">
+                                <i class="bi bi-robot me-2"></i>
+                                AI智能搜索
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#" onclick="showSection('graded-selection')">
                                 <i class="bi bi-layers me-2"></i>
                                 智能分级抽取
@@ -1473,6 +1479,90 @@
                                 <button type="button" class="btn btn-info" onclick="exportRandomResult()">
                                     <i class="bi bi-download me-1"></i>导出结果
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI智能搜索 -->
+                <div id="ai-search" class="section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">AI 智能搜索供应商</h1>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-robot me-2"></i>用自然语言查询供应商</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-10">
+                                    <input type="text" class="form-control form-control-lg" id="aiQueryInput"
+                                           placeholder="例如：找北京的A级供应商 / 深圳在业的软件公司 / 前10家A级供应商"
+                                           onkeydown="if(event.key==='Enter') aiSearch()">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary btn-lg w-100" onclick="aiSearch()">
+                                        <i class="bi bi-search me-1"></i>智能搜索
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="text-muted small">快捷查询：</span>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickAiQuery('北京的A级供应商')">北京A级</button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickAiQuery('上海在业的供应商')">上海在业</button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickAiQuery('软件公司')">软件公司</button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickAiQuery('A级供应商有哪些')">所有A级</button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickAiQuery('前10家供应商')">前10家</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 搜索条件解析展示 -->
+                            <div id="aiQueryConditions" class="alert alert-info mb-3" style="display: none;">
+                                <strong><i class="bi bi-info-circle me-1"></i>AI 解析条件：</strong>
+                                <span id="conditionsText"></span>
+                            </div>
+
+                            <!-- AI 解读 -->
+                            <div id="aiSummary" class="alert alert-success mb-3" style="display: none;">
+                                <strong><i class="bi bi-lightbulb me-1"></i>AI 解读：</strong>
+                                <span id="summaryText"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 搜索结果 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>查询结果</h5>
+                                <span class="badge bg-primary" id="aiResultCount">0 家</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>供应商名称</th>
+                                            <th>统一社会信用代码</th>
+                                            <th>资质等级</th>
+                                            <th>地区</th>
+                                            <th>城市</th>
+                                            <th>行业</th>
+                                            <th>经营状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="aiResultsTableBody">
+                                        <tr><td colspan="9" class="text-center text-muted py-4">请在上方输入查询条件</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -2245,8 +2335,126 @@
                 case 'selection-rules':
                     loadSelectionRules();
                     break;
+                case 'ai-search':
+                    // 清空 AI 搜索结果
+                    document.getElementById('aiResultsTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">请在上方输入查询条件</td></tr>';
+                    document.getElementById('aiQueryConditions').style.display = 'none';
+                    document.getElementById('aiSummary').style.display = 'none';
+                    document.getElementById('aiResultCount').textContent = '0 家';
+                    break;
             }
         }
+
+        // ============ AI 智能搜索 ============
+
+        function aiSearch() {
+            const question = document.getElementById('aiQueryInput').value.trim();
+            if (!question) {
+                showError('请输入查询条件');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showError('请先登录');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('aiResultsTableBody').innerHTML =
+                '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><br>AI 正在解析您的查询...</td></tr>';
+
+            fetch('/api/ai/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ question: question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderAiResults(data.data);
+                } else {
+                    document.getElementById('aiResultsTableBody').innerHTML =
+                        `<tr><td colspan="9" class="text-center text-danger py-4">查询失败：${data.message}</td></tr>`;
+                }
+            })
+            .catch(err => {
+                console.error('AI 查询失败:', err);
+                document.getElementById('aiResultsTableBody').innerHTML =
+                    '<tr><td colspan="9" class="text-center text-danger py-4">查询失败，请稍后重试</td></tr>';
+            });
+        }
+
+        function quickAiQuery(question) {
+            document.getElementById('aiQueryInput').value = question;
+            aiSearch();
+        }
+
+        function renderAiResults(data) {
+            // 显示解析条件
+            if (data.conditions && Object.keys(data.conditions).length > 0) {
+                const condText = Object.entries(data.conditions)
+                    .filter(([_, v]) => v !== null && v !== undefined)
+                    .map(([k, v]) => `${k}: "${v}"`)
+                    .join('，');
+                document.getElementById('conditionsText').textContent = condText;
+                document.getElementById('aiQueryConditions').style.display = 'block';
+            } else {
+                document.getElementById('aiQueryConditions').style.display = 'none';
+            }
+
+            // 显示 AI 解读
+            if (data.summary) {
+                document.getElementById('summaryText').textContent = data.summary;
+                document.getElementById('aiSummary').style.display = 'block';
+            } else {
+                document.getElementById('aiSummary').style.display = 'none';
+            }
+
+            // 显示结果数量
+            document.getElementById('aiResultCount').textContent = (data.totalCount || 0) + ' 家';
+
+            // 渲染结果表格
+            const tbody = document.getElementById('aiResultsTableBody');
+            if (!data.results || data.results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">未找到符合条件的供应商</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.results.map(s => `
+                <tr>
+                    <td>${s.id || ''}</td>
+                    <td><strong>${s.name || ''}</strong></td>
+                    <td><code class="small">${s.creditCode || ''}</code></td>
+                    <td>${formatQualification(s.qualification)}</td>
+                    <td>${s.region || ''}</td>
+                    <td>${s.city || ''}</td>
+                    <td>${s.industry || ''}</td>
+                    <td><span class="badge ${getStatusClass(s.status)}">${s.status || ''}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="showSupplierDetail(${s.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusClass(status) {
+            if (!status) return 'bg-secondary';
+            switch(status) {
+                case '在业': return 'bg-success';
+                case '存续': return 'bg-success';
+                case '注销': return 'bg-danger';
+                case '吊销': return 'bg-dark';
+                case '歇业': return 'bg-warning text-dark';
+                default: return 'bg-secondary';
+            }
+        }
+
         
         // 加载操作日志
         function loadOperationLogs() {
