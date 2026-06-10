@@ -95,13 +95,15 @@ CREATE TABLE operation_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
 
 -- 创建索引
-CREATE INDEX idx_supplier_qualification ON supplier(qualification);
-CREATE INDEX idx_supplier_region ON supplier(region);
-CREATE INDEX idx_supplier_industry ON supplier(industry);
-CREATE INDEX idx_supplier_status ON supplier(status);
-CREATE INDEX idx_supplier_scale ON supplier(scale);
-CREATE INDEX idx_supplier_establish_date ON supplier(establish_date);
-CREATE INDEX idx_supplier_created_at ON supplier(created_at);
+CREATE INDEX idx_supplier_qualification ON suppliers(qualification);
+CREATE INDEX idx_supplier_region ON suppliers(region);
+CREATE INDEX idx_supplier_industry ON suppliers(industry);
+CREATE INDEX idx_supplier_status ON suppliers(status);
+CREATE INDEX idx_supplier_scale ON suppliers(scale);
+CREATE INDEX idx_supplier_establish_date ON suppliers(establish_date);
+CREATE INDEX idx_supplier_created_at ON suppliers(created_at);
+
+CREATE INDEX idx_users_username ON users(username);
 
 CREATE INDEX idx_graded_rule_qualification ON graded_selection_rules(qualification);
 CREATE INDEX idx_graded_rule_active ON graded_selection_rules(is_active);
@@ -121,8 +123,14 @@ INSERT INTO graded_selection_rules (rule_name, qualification, count, percentage,
 ('B级供应商规则', 'B级', 2, 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
 ('C级供应商规则', 'C级', 1, 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
 
+-- 插入用户数据（密码使用BCrypt加密，密码为 admin123 和 user123）
+INSERT INTO users (username, password, real_name, email, role, is_active) VALUES 
+('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjzqAKL9xL5jvMFVdNJHvGCgTq/VEq', '系统管理员', 'admin@example.com', 'ADMIN', true),
+('user', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjzqAKL9xL5jvMFVdNJHvGCgTq/VEq', '普通用户', 'user@example.com', 'USER', true)
+ON DUPLICATE KEY UPDATE username=username;
+
 -- 插入示例供应商数据
-INSERT INTO supplier (name, credit_code, qualification, region, industry, address, contact_person, contact_phone, contact_email, business_scope, performance, establish_date, legal_person, registered_capital, status, scale, qualification_materials, certification_date, expiry_date, remark) VALUES
+INSERT INTO suppliers (name, credit_code, qualification, region, industry, address, contact_person, contact_phone, contact_email, business_scope, performance, establish_date, legal_person, registered_capital, status, scale, qualification_materials, certification_date, expiry_date, remark) VALUES
 ('北京科技有限公司', '91110000123456789X', 'A级', '北京市', '制造业', '北京市朝阳区科技园区123号', '张三', '13800138001', 'zhangsan@tech.com', '软件开发、系统集成、技术咨询', '成功完成多个大型政府项目，客户满意度95%以上', '2010-05-15', '李四', 10000000.00, '正常', '大型', '["ISO9001认证","CMMI5级认证","高新技术企业证书"]', '2023-01-01', '2026-01-01', '技术实力强，服务态度好'),
 ('上海制造集团', '91310000123456789Y', 'A级', '上海市', '制造业', '上海市浦东新区工业园456号', '王五', '13800138002', 'wangwu@manufacture.com', '机械制造、设备生产、工业自动化', '年产值超过5亿元，产品远销海外', '2008-03-20', '赵六', 50000000.00, '正常', '大型', '["ISO9001认证","CE认证","高新技术企业证书"]', '2023-02-01', '2026-02-01', '产品质量稳定，交付及时'),
 ('广州贸易有限公司', '91440000123456789Z', 'B级', '广东省', '贸易业', '广州市天河区商务中心789号', '孙七', '13800138003', 'sunqi@trade.com', '进出口贸易、供应链管理、物流服务', '年贸易额超过2亿元，合作伙伴众多', '2012-08-10', '周八', 20000000.00, '正常', '中型', '["对外贸易经营者备案","海关A类企业","ISO9001认证"]', '2023-03-01', '2026-03-01', '贸易经验丰富，渠道稳定'),
@@ -138,7 +146,9 @@ INSERT INTO supplier (name, credit_code, qualification, region, industry, addres
 SHOW TABLES;
 
 -- 显示各表的记录数
-SELECT 'supplier' as table_name, COUNT(*) as record_count FROM supplier
+SELECT 'suppliers' as table_name, COUNT(*) as record_count FROM suppliers
+UNION ALL
+SELECT 'users' as table_name, COUNT(*) as record_count FROM users
 UNION ALL
 SELECT 'graded_selection_rules' as table_name, COUNT(*) as record_count FROM graded_selection_rules
 UNION ALL
