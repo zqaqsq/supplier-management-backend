@@ -37,42 +37,33 @@ public class AiQueryServiceImpl implements AiQueryService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String SYSTEM_PROMPT = """
-            你是一个供应商管理系统的查询助手。你的任务是将用户的中文自然语言问题解析成结构化的查询条件。
-
-            供应商数据表的字段如下：
-            - name: 供应商名称
-            - qualification: 资质等级 (A, B, C, D)
-            - region: 地区/省份
-            - city: 城市
-            - contactPerson: 联系人
-            - contactPhone: 联系电话
-            - businessScope: 经营范围
-            - status: 经营状态 (在业, 注销, 吊销, 歇业)
-            - creditCode: 统一社会信用代码
-
-            你必须只返回一个JSON对象，不要有任何其他文字。格式如下：
-            {
-                "qualification": "资质等级关键词，如 A、B、C、D，或 null 表示不限",
-                "region": "地区关键词，如 北京、上海、广东，或 null 表示不限",
-                "city": "城市关键词，或 null",
-                "status": "经营状态关键词，如 在业、注销，或 null",
-                "keyword": "供应商名称或经营范围的模糊搜索关键词，或 null",
-                "limit": "返回数量，默认 20"
-            }
-
-            示例：
-            用户输入："找北京的A级供应商"
-            返回：{"qualification": "A", "region": "北京", "city": null, "status": null, "keyword": null, "limit": 20}
-
-            用户输入："深圳有哪些在业供应商"
-            返回：{"qualification": null, "region": "广东", "city": "深圳", "status": "在业", "keyword": null, "limit": 20}
-
-            用户输入："过去三个月新增了几家供应商"
-            返回：{"qualification": null, "region": null, "city": null, "status": null, "keyword": null, "limit": 100}
-
-            现在用户的问题是：
-            """;
+    private static final String SYSTEM_PROMPT = 
+            "你是一个供应商管理系统的查询助手。你的任务是将用户的中文自然语言问题解析成结构化的查询条件。" + "\n" +
+            "供应商数据表的字段如下：" + "\n" +
+            "- name: 供应商名称" + "\n" +
+            "- qualification: 资质等级 (A, B, C, D)" + "\n" +
+            "- region: 地区/省份" + "\n" +
+            "- city: 城市" + "\n" +
+            "- contactPerson: 联系人" + "\n" +
+            "- contactPhone: 联系电话" + "\n" +
+            "- businessScope: 经营范围" + "\n" +
+            "- status: 经营状态 (在业, 注销, 吊销, 歇业)" + "\n" +
+            "- creditCode: 统一社会信用代码" + "\n" +
+            "你必须只返回一个JSON对象，不要有任何其他文字。格式如下：" + "\n" +
+            "{\"qualification\": \"资质等级关键词，如 A、B、C、D，或 null 表示不限\"," + "\n" +
+            "\"region\": \"地区关键词，如 北京、上海、广东，或 null 表示不限\"," + "\n" +
+            "\"city\": \"城市关键词，或 null\"," + "\n" +
+            "\"status\": \"经营状态关键词，如 在业、注销，或 null\"," + "\n" +
+            "\"keyword\": \"供应商名称或经营范围的模糊搜索关键词，或 null\"," + "\n" +
+            "\"limit\": \"返回数量，默认 20\"}" + "\n" +
+            "示例：" + "\n" +
+            "用户输入：\"找北京的A级供应商\"" + "\n" +
+            "返回：{\"qualification\": \"A\", \"region\": \"北京\", \"city\": null, \"status\": null, \"keyword\": null, \"limit\": 20}" + "\n" +
+            "用户输入：\"深圳有哪些在业供应商\"" + "\n" +
+            "返回：{\"qualification\": null, \"region\": \"广东\", \"city\": \"深圳\", \"status\": \"在业\", \"keyword\": null, \"limit\": 20}" + "\n" +
+            "用户输入：\"过去三个月新增了几家供应商\"" + "\n" +
+            "返回：{\"qualification\": null, \"region\": null, \"city\": null, \"status\": null, \"keyword\": null, \"limit\": 100}" + "\n" +
+            "现在用户的问题是：";
 
     @Override
     public AiQueryResponse querySuppliers(AiQueryRequest request) {
@@ -241,8 +232,7 @@ public class AiQueryServiceImpl implements AiQueryService {
                 .filter(s -> keyword == null ||
                         (s.getName() != null && s.getName().contains(keyword)) ||
                         (s.getBusinessScope() != null && s.getBusinessScope().contains(keyword)) ||
-                        (s.getContactPerson() != null && s.getContactPerson().contains(keyword)))
-                )
+                        (s.getContactPerson() != null && s.getContactPerson().contains(keyword))))
                 .limit(limit)
                 .toList();
     }
