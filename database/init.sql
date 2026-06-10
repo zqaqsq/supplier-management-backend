@@ -43,7 +43,6 @@ CREATE TABLE graded_selection_rules (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     rule_name VARCHAR(200) NOT NULL COMMENT '规则名称',
     qualification VARCHAR(50) NOT NULL COMMENT '资质等级',
-    count INTEGER NOT NULL COMMENT '抽取数量',
     percentage INTEGER NOT NULL COMMENT '占比百分比',
     min_count INTEGER NOT NULL COMMENT '最小数量',
     max_count INTEGER NOT NULL COMMENT '最大数量',
