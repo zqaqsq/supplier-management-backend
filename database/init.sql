@@ -31,24 +31,24 @@ CREATE TABLE suppliers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL COMMENT '供应商名称',
     credit_code VARCHAR(50) UNIQUE NOT NULL COMMENT '统一社会信用代码',
-    qualification VARCHAR(50) NOT NULL COMMENT '资质等级',
+    qualification VARCHAR(20) NOT NULL COMMENT '资质等级',
     region VARCHAR(100) NOT NULL COMMENT '地区',
     industry VARCHAR(100) NOT NULL COMMENT '行业',
-    address VARCHAR(500) NOT NULL COMMENT '注册地址',
-    contact_person VARCHAR(100) NOT NULL COMMENT '联系人',
-    contact_phone VARCHAR(20) NOT NULL COMMENT '联系电话',
+    address VARCHAR(500) COMMENT '注册地址',
+    contact_person VARCHAR(50) COMMENT '联系人',
+    contact_phone VARCHAR(20) COMMENT '联系电话',
     contact_email VARCHAR(100) COMMENT '联系邮箱',
-    business_scope TEXT COMMENT '经营范围',
-    performance TEXT COMMENT '过往业绩',
+    business_scope VARCHAR(2000) COMMENT '经营范围',
+    performance VARCHAR(2000) COMMENT '过往业绩',
     establish_date DATE COMMENT '成立时间',
-    legal_person VARCHAR(100) COMMENT '法人',
+    legal_person VARCHAR(50) COMMENT '法人',
     registered_capital DECIMAL(15,2) COMMENT '注册资本',
-    status VARCHAR(50) DEFAULT '正常' COMMENT '经营状态',
-    scale VARCHAR(50) COMMENT '企业规模',
-    qualification_materials TEXT COMMENT '资质材料（JSON格式）',
+    status VARCHAR(20) NOT NULL COMMENT '经营状态',
+    scale VARCHAR(20) COMMENT '企业规模',
+    qualification_materials VARCHAR(1000) COMMENT '资质材料（JSON格式）',
     certification_date DATE COMMENT '认证日期',
     expiry_date DATE COMMENT '到期日期',
-    remark TEXT COMMENT '备注',
+    remark VARCHAR(1000) COMMENT '备注',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商信息表';
@@ -56,12 +56,12 @@ CREATE TABLE suppliers (
 -- 创建分级选择规则表
 CREATE TABLE graded_selection_rules (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    rule_name VARCHAR(200) NOT NULL COMMENT '规则名称',
-    qualification VARCHAR(50) NOT NULL COMMENT '资质等级',
+    rule_name VARCHAR(100) NOT NULL COMMENT '规则名称',
+    qualification VARCHAR(20) NOT NULL COMMENT '资质等级',
     count INTEGER NOT NULL COMMENT '抽取数量',
     percentage INTEGER NOT NULL COMMENT '占比百分比',
-    min_count INTEGER NOT NULL COMMENT '最小数量',
-    max_count INTEGER NOT NULL COMMENT '最大数量',
+    min_count INTEGER COMMENT '最小数量',
+    max_count INTEGER COMMENT '最大数量',
     industry VARCHAR(100) COMMENT '行业限制',
     region VARCHAR(100) COMMENT '地区限制',
     is_active BOOLEAN DEFAULT TRUE COMMENT '是否启用',
@@ -77,7 +77,7 @@ CREATE TABLE selection_results (
     total_count INTEGER NOT NULL COMMENT '总选择数量',
     conditions VARCHAR(1000) COMMENT '选择条件（JSON格式）',
     results VARCHAR(2000) COMMENT '选择结果（JSON格式）',
-    operator VARCHAR(100) COMMENT '操作人',
+    operator VARCHAR(100) NOT NULL COMMENT '操作人',
     retry_count INTEGER DEFAULT 0 COMMENT '重试次数',
     reasons VARCHAR(2000) COMMENT '重试原因',
     ip_address VARCHAR(50) COMMENT 'IP地址',
@@ -117,17 +117,17 @@ CREATE INDEX idx_operation_log_created_at ON operation_logs(created_at);
 
 -- 插入示例数据
 
--- 插入分级选择规则
-INSERT INTO graded_selection_rules (rule_name, qualification, count, percentage, min_count, max_count, industry, region, description) VALUES
-('A级供应商规则', 'A级', 3, 60, 2, 3, '制造业', '全国', 'A级供应商占比60%，数量2-3家'),
-('B级供应商规则', 'B级', 2, 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
-('C级供应商规则', 'C级', 1, 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
-
 -- 插入用户数据（密码使用BCrypt加密，密码为 admin123 和 user123）
 INSERT INTO users (username, password, real_name, email, role, is_active) VALUES 
 ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjzqAKL9xL5jvMFVdNJHvGCgTq/VEq', '系统管理员', 'admin@example.com', 'ADMIN', true),
 ('user', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjzqAKL9xL5jvMFVdNJHvGCgTq/VEq', '普通用户', 'user@example.com', 'USER', true)
 ON DUPLICATE KEY UPDATE username=username;
+
+-- 插入分级选择规则
+INSERT INTO graded_selection_rules (rule_name, qualification, count, percentage, min_count, max_count, industry, region, description) VALUES
+('A级供应商规则', 'A级', 3, 60, 2, 3, '制造业', '全国', 'A级供应商占比60%，数量2-3家'),
+('B级供应商规则', 'B级', 2, 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
+('C级供应商规则', 'C级', 1, 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
 
 -- 插入示例供应商数据
 INSERT INTO suppliers (name, credit_code, qualification, region, industry, address, contact_person, contact_phone, contact_email, business_scope, performance, establish_date, legal_person, registered_capital, status, scale, qualification_materials, certification_date, expiry_date, remark) VALUES
@@ -140,7 +140,7 @@ INSERT INTO suppliers (name, credit_code, qualification, region, industry, addre
 ('武汉物流公司', '91420000123456789D', 'B级', '湖北省', '物流业', '武汉市东西湖区物流园147号', '张五', '13800138007', 'zhangwu@logistics.com', '物流配送、仓储服务、供应链管理', '覆盖华中地区，配送网络完善', '2014-04-12', '赵六', 12000000.00, '正常', '中型', '["道路运输许可证","仓储服务许可证","ISO9001认证"]', '2023-07-01', '2026-07-01', '物流网络完善，服务覆盖广'),
 ('西安软件公司', '91610000123456789E', 'A级', '陕西省', '服务业', '西安市高新区软件园258号', '刘七', '13800138008', 'liuqi@software.com', '软件开发、系统集成、技术培训', '拥有多项自主知识产权，技术领先', '2011-11-08', '孙八', 25000000.00, '正常', '大型', '["高新技术企业证书","软件企业认定证书","CMMI4级认证"]', '2023-08-01', '2026-08-01', '技术实力雄厚，创新能力强'),
 ('南京咨询公司', '91320000123456789F', 'C级', '江苏省', '服务业', '南京市建邺区商务区369号', '陈九', '13800138009', 'chenjiu@consulting.com', '管理咨询、培训服务、项目评估', '服务过多个知名企业，口碑良好', '2017-02-28', '周十', 3000000.00, '正常', '小型', '["咨询资质证书","ISO9001认证"]', '2023-09-01', '2026-09-01', '专业水平高，服务细致'),
-('重庆制造公司', '91500000123456789G', 'B级', '重庆市', '制造业', '重庆市渝北区工业园741号', '杨一', '13800138010', 'yangyi@manufacture2.com', '汽车零部件、机械加工、模具制造', '为多家汽车厂商配套，质量稳定', '2013-07-14', '郑二', 18000000.00, '正常', '中型', '["ISO9001认证","TS16949认证","高新技术企业证书"]', '2023-10-01', '2026-10-01', '产品质量可靠，技术成熟');
+('重庆制造公司', '9150000123456789G', 'B级', '重庆市', '制造业', '重庆市渝北区工业园741号', '杨一', '13800138010', 'yangyi@manufacture2.com', '汽车零部件、机械加工、模具制造', '为多家汽车厂商配套，质量稳定', '2013-07-14', '郑二', 18000000.00, '正常', '中型', '["ISO9001认证","TS16949认证","高新技术企业证书"]', '2023-10-01', '2026-10-01', '产品质量可靠，技术成熟');
 
 -- 显示创建的表结构
 SHOW TABLES;
