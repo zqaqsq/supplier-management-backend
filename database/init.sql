@@ -73,14 +73,9 @@ CREATE TABLE selection_results (
 CREATE TABLE operation_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     operation_type VARCHAR(100) NOT NULL COMMENT '操作类型',
-    operation_desc TEXT COMMENT '操作描述',
-    operator VARCHAR(100) COMMENT '操作人',
+    content VARCHAR(500) NOT NULL COMMENT '操作内容',
+    operator VARCHAR(100) NOT NULL COMMENT '操作人',
     ip_address VARCHAR(50) COMMENT 'IP地址',
-    request_data TEXT COMMENT '请求数据',
-    response_data TEXT COMMENT '响应数据',
-    status VARCHAR(20) DEFAULT 'SUCCESS' COMMENT '操作状态',
-    error_message TEXT COMMENT '错误信息',
-    execution_time BIGINT COMMENT '执行时间（毫秒）',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
 
