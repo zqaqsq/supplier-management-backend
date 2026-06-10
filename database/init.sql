@@ -8,7 +8,7 @@ USE supplier_management;
 -- 删除已存在的表（如果存在）
 DROP TABLE IF EXISTS operation_log;
 DROP TABLE IF EXISTS selection_result;
-DROP TABLE IF EXISTS graded_selection_rule;
+DROP TABLE IF EXISTS graded_selection_rules;
 DROP TABLE IF EXISTS supplier;
 
 -- 创建供应商表
@@ -39,7 +39,7 @@ CREATE TABLE supplier (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商信息表';
 
 -- 创建分级选择规则表
-CREATE TABLE graded_selection_rule (
+CREATE TABLE graded_selection_rules (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     rule_name VARCHAR(200) NOT NULL COMMENT '规则名称',
     qualification VARCHAR(50) NOT NULL COMMENT '资质等级',
@@ -92,8 +92,8 @@ CREATE INDEX idx_supplier_scale ON supplier(scale);
 CREATE INDEX idx_supplier_establish_date ON supplier(establish_date);
 CREATE INDEX idx_supplier_created_at ON supplier(created_at);
 
-CREATE INDEX idx_graded_rule_qualification ON graded_selection_rule(qualification);
-CREATE INDEX idx_graded_rule_active ON graded_selection_rule(is_active);
+CREATE INDEX idx_graded_rule_qualification ON graded_selection_rules(qualification);
+CREATE INDEX idx_graded_rule_active ON graded_selection_rules(is_active);
 
 CREATE INDEX idx_selection_result_type ON selection_result(selection_type);
 CREATE INDEX idx_selection_result_created_at ON selection_result(created_at);
@@ -105,7 +105,7 @@ CREATE INDEX idx_operation_log_created_at ON operation_log(created_at);
 -- 插入示例数据
 
 -- 插入分级选择规则
-INSERT INTO graded_selection_rule (rule_name, qualification, percentage, min_count, max_count, industry, region, description) VALUES
+INSERT INTO graded_selection_rules (rule_name, qualification, percentage, min_count, max_count, industry, region, description) VALUES
 ('A级供应商规则', 'A级', 60, 2, 3, '制造业', '全国', 'A级供应商占比60%，数量2-3家'),
 ('B级供应商规则', 'B级', 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
 ('C级供应商规则', 'C级', 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
@@ -129,7 +129,7 @@ SHOW TABLES;
 -- 显示各表的记录数
 SELECT 'supplier' as table_name, COUNT(*) as record_count FROM supplier
 UNION ALL
-SELECT 'graded_selection_rule' as table_name, COUNT(*) as record_count FROM graded_selection_rule
+SELECT 'graded_selection_rules' as table_name, COUNT(*) as record_count FROM graded_selection_rules
 UNION ALL
 SELECT 'selection_result' as table_name, COUNT(*) as record_count FROM selection_result
 UNION ALL
