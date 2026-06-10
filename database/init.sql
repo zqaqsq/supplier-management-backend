@@ -50,7 +50,7 @@ CREATE TABLE graded_selection_rules (
     industry VARCHAR(100) COMMENT '行业限制',
     region VARCHAR(100) COMMENT '地区限制',
     is_active BOOLEAN DEFAULT TRUE COMMENT '是否启用',
-    description TEXT COMMENT '规则描述',
+    description VARCHAR(500) COMMENT '规则描述',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分级选择规则表';
