@@ -43,7 +43,6 @@ CREATE TABLE graded_selection_rules (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     rule_name VARCHAR(200) NOT NULL COMMENT '规则名称',
     qualification VARCHAR(50) NOT NULL COMMENT '资质等级',
-    count INTEGER NOT NULL COMMENT '抽取数量',
     percentage INTEGER NOT NULL COMMENT '占比百分比',
     min_count INTEGER NOT NULL COMMENT '最小数量',
     max_count INTEGER NOT NULL COMMENT '最大数量',
@@ -106,10 +105,10 @@ CREATE INDEX idx_operation_log_created_at ON operation_log(created_at);
 -- 插入示例数据
 
 -- 插入分级选择规则
-INSERT INTO graded_selection_rules (rule_name, qualification, count, percentage, min_count, max_count, industry, region, description) VALUES
-('A级供应商规则', 'A级', 3, 60, 2, 3, '制造业', '全国', 'A级供应商占比60%，数量2-3家'),
-('B级供应商规则', 'B级', 2, 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
-('C级供应商规则', 'C级', 1, 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
+INSERT INTO graded_selection_rules (rule_name, qualification, percentage, min_count, max_count, industry, region, description) VALUES
+('A级供应商规则', 'A级', 60, 2, 3, '制造业', '全国', 'A级供应商占比60%，数量2-3家'),
+('B级供应商规则', 'B级', 30, 1, 2, '制造业', '全国', 'B级供应商占比30%，数量1-2家'),
+('C级供应商规则', 'C级', 10, 0, 1, '制造业', '全国', 'C级供应商占比10%，数量0-1家');
 
 -- 插入示例供应商数据
 INSERT INTO supplier (name, credit_code, qualification, region, industry, address, contact_person, contact_phone, contact_email, business_scope, performance, establish_date, legal_person, registered_capital, status, scale, qualification_materials, certification_date, expiry_date, remark) VALUES
