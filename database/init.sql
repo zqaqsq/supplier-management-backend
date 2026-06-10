@@ -6,8 +6,8 @@ CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE supplier_management;
 
 -- 删除已存在的表（如果存在）
-DROP TABLE IF EXISTS operation_log;
-DROP TABLE IF EXISTS selection_result;
+DROP TABLE IF EXISTS operation_logs;
+DROP TABLE IF EXISTS selection_results;
 DROP TABLE IF EXISTS graded_selection_rules;
 DROP TABLE IF EXISTS supplier;
 
@@ -56,21 +56,21 @@ CREATE TABLE graded_selection_rules (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分级选择规则表';
 
 -- 创建选择结果表
-CREATE TABLE selection_result (
+CREATE TABLE selection_results (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     selection_type VARCHAR(50) NOT NULL COMMENT '选择类型：random-随机，graded-分级',
     total_count INTEGER NOT NULL COMMENT '总选择数量',
-    conditions TEXT COMMENT '选择条件（JSON格式）',
-    results TEXT COMMENT '选择结果（JSON格式）',
+    conditions VARCHAR(1000) COMMENT '选择条件（JSON格式）',
+    results VARCHAR(2000) COMMENT '选择结果（JSON格式）',
     operator VARCHAR(100) COMMENT '操作人',
     retry_count INTEGER DEFAULT 0 COMMENT '重试次数',
-    reasons TEXT COMMENT '重试原因',
+    reasons VARCHAR(2000) COMMENT '重试原因',
     ip_address VARCHAR(50) COMMENT 'IP地址',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='选择结果表';
 
 -- 创建操作日志表
-CREATE TABLE operation_log (
+CREATE TABLE operation_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     operation_type VARCHAR(100) NOT NULL COMMENT '操作类型',
     operation_desc TEXT COMMENT '操作描述',
@@ -96,12 +96,12 @@ CREATE INDEX idx_supplier_created_at ON supplier(created_at);
 CREATE INDEX idx_graded_rule_qualification ON graded_selection_rules(qualification);
 CREATE INDEX idx_graded_rule_active ON graded_selection_rules(is_active);
 
-CREATE INDEX idx_selection_result_type ON selection_result(selection_type);
-CREATE INDEX idx_selection_result_created_at ON selection_result(created_at);
+CREATE INDEX idx_selection_result_type ON selection_results(selection_type);
+CREATE INDEX idx_selection_result_created_at ON selection_results(created_at);
 
-CREATE INDEX idx_operation_log_type ON operation_log(operation_type);
-CREATE INDEX idx_operation_log_operator ON operation_log(operator);
-CREATE INDEX idx_operation_log_created_at ON operation_log(created_at);
+CREATE INDEX idx_operation_log_type ON operation_logs(operation_type);
+CREATE INDEX idx_operation_log_operator ON operation_logs(operator);
+CREATE INDEX idx_operation_log_created_at ON operation_logs(created_at);
 
 -- 插入示例数据
 
@@ -132,6 +132,6 @@ SELECT 'supplier' as table_name, COUNT(*) as record_count FROM supplier
 UNION ALL
 SELECT 'graded_selection_rules' as table_name, COUNT(*) as record_count FROM graded_selection_rules
 UNION ALL
-SELECT 'selection_result' as table_name, COUNT(*) as record_count FROM selection_result
+SELECT 'selection_results' as table_name, COUNT(*) as record_count FROM selection_results
 UNION ALL
-SELECT 'operation_log' as table_name, COUNT(*) as record_count FROM operation_log;
+SELECT 'operation_logs' as table_name, COUNT(*) as record_count FROM operation_logs;
